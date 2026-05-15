@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ personal.full_name }} — Resume</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="resume">
+
+<header class="resume-header">
+  <h1>{{ personal.full_name }}</h1>
+  <p class="headline">{{ resume.headline }}</p>
+  <p class="contact">
+    {{ personal.location.city }}, {{ personal.location.province }} &nbsp;·&nbsp;
+    <a href="mailto:{{ personal.email }}">{{ personal.email }}</a> &nbsp;·&nbsp;
+    {{ personal.phone }}
+    {% if personal.links.linkedin %} &nbsp;·&nbsp; <a href="{{ personal.links.linkedin }}">LinkedIn</a>{% endif %}
+    {% if personal.links.github %} &nbsp;·&nbsp; <a href="{{ personal.links.github }}">GitHub</a>{% endif %}
+    {% if personal.links.portfolio %} &nbsp;·&nbsp; <a href="{{ personal.links.portfolio }}">Portfolio</a>{% endif %}
+  </p>
+</header>
+
+<section>
+  <h2>Summary</h2>
+  <p>{{ resume.summary }}</p>
+</section>
+
+<section>
+  <h2>Experience</h2>
+  {% for exp in resume.experience %}
+  <article class="entry">
+    <div class="entry-head">
+      <strong>{{ exp.title }}</strong>, {{ exp.company }}
+      <span class="meta">{{ exp.location }} &nbsp;·&nbsp; {{ exp.start }} – {{ exp.end }}</span>
+    </div>
+    <ul>
+      {% for b in exp.bullets %}<li>{{ b.text }}</li>{% endfor %}
+    </ul>
+  </article>
+  {% endfor %}
+</section>
+
+{% if resume.projects %}
+<section>
+  <h2>Projects</h2>
+  {% for proj in resume.projects %}
+  <article class="entry">
+    <div class="entry-head">
+      <strong>{% if proj.url %}<a href="{{ proj.url }}">{{ proj.name }}</a>{% else %}{{ proj.name }}{% endif %}</strong>
+      <span class="meta">{{ proj.one_liner }}</span>
+    </div>
+    <ul>
+      {% for b in proj.bullets %}<li>{{ b.text }}</li>{% endfor %}
+    </ul>
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section>
+  <h2>Skills</h2>
+  <dl class="skills">
+    {% for group, items in resume.skills_grouped.items() %}
+      <dt>{{ group }}</dt>
+      <dd>{{ items | join(", ") }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+
+<section>
+  <h2>Education</h2>
+  {% for edu in resume.education %}
+  <article class="entry">
+    <div class="entry-head">
+      <strong>{{ edu.degree }}</strong>, {{ edu.school }}
+      <span class="meta">{{ edu.location }} &nbsp;·&nbsp; {{ edu.start }} – {{ edu.end }}</span>
+    </div>
+    {% if edu.honors %}<p class="meta">{{ edu.honors | join(" · ") }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
+
+</body>
+</html>

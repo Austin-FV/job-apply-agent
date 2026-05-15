@@ -1,0 +1,200 @@
+# profile.yaml — Austin Varghese
+# Single source of truth for job applications.
+
+personal:
+  full_name: "Austin Varghese"
+  preferred_name: "Austin"
+  email: "austinfv01@gmail.com"
+  phone: "+1-226-218-9350"
+  location:
+    city: "Guelph"
+    province: "Ontario"
+    country: "Canada"
+  links:
+    linkedin: "https://linkedin.com/in/Austin-FV"
+    github: "https://github.com/Austin-FV"
+    portfolio: "https://austinfv.dev"
+
+work_authorization:
+  canada: "citizen"          
+  us: "no"     # need_sponsorship
+  willing_to_relocate: true  
+  remote_preference: "flexible"  # remote / hybrid / onsite / flexible
+
+# All optional fields — fill in only what you're comfortable disclosing on ATS forms.
+demographics:
+  gender: "male"
+  ethnicity: "south asian"
+  veteran_status: "no"
+  disability_status: "no"
+
+experience:
+  - company: "Express Scripts Canada"
+    title: "Automation Engineer"
+    location: "Mississauga, ON"
+    start: "2024-03"
+    end: "present"
+    summary: "Building Java/Selenium automation frameworks and data tooling for a pharmacy benefits platform; expanding regression coverage and reducing manual QA."
+    achievements:
+      - "Engineered a data provisioning tool generating 1,000+ test users in staging, enabling large-scale performance validation under production-like conditions"
+      - "Designed and scaled a Java automation framework with Selenium, JUnit, Cucumber (BDD), and Maven; built 25+ reusable components that expanded regression coverage and cut manual QA by 75%"
+      - "Automated API and data validation with REST assertions and Oracle SQL across 50+ endpoints, ensuring consistency between services and databases"
+      - "Identified high-risk edge cases through developer code reviews, reducing post-release defects by 30% across 10+ release cycles"
+      - "Standardized Zephyr test case practices in Jira across 100+ test cases, improving consistency and traceability"
+    tech: ["Java", "Selenium", "JUnit", "Cucumber", "Maven", "Oracle SQL", "REST", "Jira", "Zephyr"]
+    tags: ["qa", "automation", "test-engineering", "framework-design", "api"]
+
+  - company: "Hammond Power Solutions"
+    title: "Software Developer Intern"
+    location: "Guelph, ON"
+    start: "2021-05"
+    end: "2022-04"
+    summary: "Built internal tooling and workflow automation across North American operations using SharePoint and custom integrations."
+    achievements:
+      - "Developed internal tools using SharePoint supporting 3+ departments and optimizing cross-team workflows"
+      - "Built a custom issue-tracking system managing 100+ internal requests, streamlining intake and categorization"
+      - "Integrated custom SharePoint forms with Excel reporting, eliminating 80% of manual entry errors"
+      - "Automated form validation and email notifications, cutting average request response time by 40%"
+      - "Improved operational efficiency by 50% across North American operations through workflow automation"
+    tech: ["SharePoint", "Excel", "JavaScript"]
+    tags: ["automation", "internal-tools", "workflow", "operations"]
+
+education:
+  - school: "University of Guelph"
+    degree: "Bachelor of Computing, Software Engineering (Minor: Business)"
+    location: "Guelph, ON"
+    start: "2019-09"
+    end: "2023-05"
+    honors: ["Graduated with Distinction", "Dean's Honours List"]
+    relevant_courses: ["Cloud Computing", "Parallel Programming", "Software System Development & Integration"]
+
+skills:
+  languages: ["Python", "Java", "JavaScript", "TypeScript", "C", "SQL", "HTML/CSS"]
+  frameworks: ["React.js", "Next.js", "Node.js", "Express", "Flask", "Maven", "JUnit", "Tailwind", "Selenium", "Cucumber", "Playwright"]
+  databases: ["MySQL", "PostgreSQL", "Oracle SQL", "Supabase"]
+  cloud_infra: ["AWS", "AWS S3", "Docker", "NGINX", "Render"]
+  tools: ["Git", "Postman", "Jira", "Confluence", "Zephyr"]
+  practices: ["Agile", "Scrum", "RESTful API Design", "CI/CD", "Test Automation", "OOP", "BDD"]
+  ai: ["Anthropic API", "OpenAI API", "LLM integration", "prompt engineering"]
+
+projects:
+
+  - name: "Job Apply Agent"
+    url: "https://github.com/Austin-FV/job-apply-agent"
+    summary: "AI agent that scrapes JDs, tailors resumes, and fills ATS forms end-to-end."
+    tech: ["Claude API", "browser-use", "Python", "Playwright"]
+    tags: ["ai-ops", "agents", "automation", "llm"]
+
+  - name: "gimmit"
+    url: "https://github.com/Austin-FV/gimmit"
+    summary: "VS Code extension that generates clean, conventional commits from changed files, with optional AI-powered descriptions from actual diffs."
+    achievements:
+      - "Built a VS Code extension that reads git diffs and generates conventional commit messages, eliminating the friction of writing commits manually"
+      - "Integrated Anthropic and OpenAI APIs for AI-generated commit descriptions grounded in actual diff content"
+      - "Published as a developer tool that fits into existing git workflows without disrupting them"
+    tech: ["TypeScript", "VS Code API", "Anthropic API", "OpenAI API"]
+    tags: ["ai", "llm", "developer-tools", "automation", "extension"]
+
+  - name: "austinfv.dev"
+    url: "https://austinfv.dev"
+    summary: "Personal portfolio site built from scratch — responsive SPA with dark/light theme, tabbed experience section, and project showcase."
+    achievements:
+      - "Built a responsive single-page portfolio with React, TypeScript, and Vite"
+      - "Implemented dark/light theme switching and a tabbed experience component"
+    tech: ["React", "TypeScript", "Vite", "Tailwind CSS"]
+    tags: ["frontend", "portfolio"]
+
+  - name: "touchline.ai"
+    url: "https://github.com/Austin-FV/touchline"
+    start: "2024-09"
+    end: "2025-02"
+    summary: "Full-stack SaaS platform for soccer coaches to manage players, sessions, injuries, and team analytics."
+    achievements:
+      - "Developed 20+ REST APIs with JWT-based authentication and role-based authorization using Express"
+      - "Designed normalized PostgreSQL schemas and migrations to support multi-tenant team and session data"
+      - "Integrated cloud storage via Supabase for secure media uploads and team asset management"
+    tech: ["React", "Express", "PostgreSQL", "Supabase", "Render"]
+    tags: ["full-stack", "saas", "auth", "multi-tenant"]
+
+  - name: "AWS S3 Management Shell"
+    url: "https://github.com/Austin-FV/aws-s3-shell"
+    start: "2023-01"
+    end: "2023-01"
+    summary: "Python CLI for managing AWS S3 file transfers."
+    achievements:
+      - "Constructed a Python CLI for managing AWS S3 file transfers, reducing manual cloud operations by 50%"
+      - "Implemented 10+ commands for uploading, copying, deleting, listing, and syncing S3 objects via Boto3"
+      - "Abstracted complex SDK calls into reusable modules to simplify error handling and harden CLI workflows"
+    tech: ["Python", "Boto3", "AWS S3"]
+    tags: ["cli", "cloud", "automation", "python"]
+
+  - name: "UniSearch"
+    url: "https://github.com/Austin-FV/unisearch"
+    start: "2022-04"
+    end: "2022-04"
+    summary: "Full-stack web app to search and compare university courses across institutions."
+    achievements:
+      - "Created a full-stack web application to search and compare 300+ university courses across 2 institutions"
+      - "Automated course data collection using Playwright scrapers with structured JSON output for fast querying"
+      - "Deployed a Flask REST API and React frontend behind NGINX for scalable request handling"
+    tech: ["React", "Flask", "Python", "Playwright", "NGINX"]
+    tags: ["full-stack", "scraping", "automation"]
+
+  - name: "GPX Parser Website"
+    url: "https://github.com/Austin-FV/gpx-parser"
+    start: "2021-05"
+    end: "2021-05"
+    summary: "Web app for parsing and storing GPX route files using a native C parser."
+    achievements:
+      - "Built a web app to parse GPX files using a native C-based parser, handling thousands of track points"
+      - "Supported persistent storage of hundreds of GPS routes using a Node.js, Express, and MySQL backend"
+      - "Introduced asynchronous UI updates using jQuery/AJAX with responsive layouts via Bootstrap"
+    tech: ["C", "Node.js", "Express", "MySQL", "jQuery"]
+    tags: ["full-stack", "systems"]
+
+certifications: []  # TODO: add any (AWS, etc.) if you have them
+
+# Narrative chunks the LLM pulls from for cover letters and open-ended fields.
+# Drawn from your portfolio (austinfv.dev) — your own words. Edit freely.
+narrative:
+  elevator_pitch: |
+    Software engineer drawn to full-stack development, currently an Automation
+    Engineer at Express Scripts Canada with a Software Engineering degree from
+    the University of Guelph. I enjoy owning features end-to-end — from database
+    schema to polished UI — and care about clean code and intuitive interfaces.
+
+  career_themes:
+    - "Full-stack ownership: comfortable from C parsers and Java automation frameworks up to React UIs"
+    - "Building reusable frameworks over one-off scripts — 25+ component Selenium framework, S3 CLI, gimmit extension"
+    - "Workflow automation that removes manual toil, whether for QA, internal ops, or developers"
+    - "Pulling LLMs into developer tooling — gimmit uses Anthropic/OpenAI to ground commit messages in actual diffs"
+
+  why_im_looking: |
+    # Looking to move from test automation into product engineering, ideally on a
+    # team building AI-powered tooling. I want to deepen my system design and
+    # architecture chops while shipping things users actually touch — and work
+    # alongside people I can learn from.
+
+  # personal_color: |
+  #   # Optional but useful for "tell us about yourself" or casual culture-fit prompts.
+  #   # From your portfolio: gym, meal prepping, anime/movies, new music, soccer
+  #   # (with a stated GOAT — keep that in if you want personality to come through).
+
+# Filled per-application by the agent after researching the company.
+# Leave empty in the template.
+company_specific: {}
+
+preferences:
+  desired_salary_cad: "open"     
+  notice_period_weeks: 2          
+  start_date: "flexible"
+  references: "available on request"
+
+# Standard answers to recurring ATS screening questions.
+screening_answers:
+  years_of_experience: 2           # Currently: ~2 FT + 1 intern)
+  authorized_to_work_canada: true 
+  requires_sponsorship_canada: false
+  willing_to_complete_assessment: true
+  comfortable_with_background_check: true
+  how_did_you_hear: "Twitter/X"    # default; agent can override per-application

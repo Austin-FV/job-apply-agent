@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ personal.full_name }} — Cover Letter</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="cover">
+
+<header class="cover-header">
+  <h1>{{ personal.full_name }}</h1>
+  <p class="contact">
+    {{ personal.location.city }}, {{ personal.location.province }} &nbsp;·&nbsp;
+    <a href="mailto:{{ personal.email }}">{{ personal.email }}</a> &nbsp;·&nbsp;
+    {{ personal.phone }}
+  </p>
+</header>
+
+<p class="date-line">Re: {{ title }} — {{ company }}</p>
+
+<p>Dear {{ company }} Hiring Team,</p>
+
+{% for para in body_paragraphs %}
+<p>{{ para }}</p>
+{% endfor %}
+
+<p class="signoff">
+  Best,<br>
+  {{ personal.full_name }}
+</p>
+
+</body>
+</html>

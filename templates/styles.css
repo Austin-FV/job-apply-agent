@@ -1,0 +1,107 @@
+@page {
+  size: Letter;
+  margin: 0.6in 0.7in;
+}
+
+body {
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.4;
+  color: #1a1a1a;
+}
+
+a {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: 20pt;
+  margin: 0 0 2px 0;
+}
+
+h2 {
+  font-size: 11pt;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #1a1a1a;
+  padding-bottom: 2px;
+  margin: 14px 0 6px 0;
+}
+
+p {
+  margin: 4px 0;
+}
+
+ul {
+  margin: 4px 0 6px 18px;
+  padding: 0;
+}
+
+li {
+  margin: 2px 0;
+}
+
+.resume-header,
+.cover-header {
+  margin-bottom: 8px;
+}
+
+.headline {
+  font-size: 11pt;
+  color: #555;
+  margin: 0 0 4px 0;
+}
+
+.contact {
+  font-size: 9.5pt;
+  color: #444;
+  margin: 0;
+}
+
+.entry {
+  margin: 6px 0 8px 0;
+}
+
+.entry-head {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.entry-head strong {
+  font-size: 10.5pt;
+}
+
+.meta {
+  font-size: 9.5pt;
+  color: #555;
+}
+
+dl.skills {
+  margin: 4px 0;
+}
+
+dl.skills dt {
+  font-weight: 600;
+  float: left;
+  width: 110px;
+  clear: left;
+}
+
+dl.skills dd {
+  margin: 0 0 4px 110px;
+}
+
+body.cover p {
+  margin: 0 0 10px 0;
+}
+
+.date-line {
+  color: #555;
+  margin-bottom: 16px;
+}
+
+.signoff {
+  margin-top: 18px;
+}

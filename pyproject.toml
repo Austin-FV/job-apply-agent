@@ -1,0 +1,44 @@
+[project]
+name = "job-apply-agent"
+version = "0.1.0"
+description = "Take a job posting URL, generate a tailored resume + cover letter, and fill the ATS form end-to-end."
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40.0",
+    "browser-use>=0.1.40",
+    "playwright>=1.49.0",
+    "pyyaml>=6.0.2",
+    "pydantic>=2.9.0",
+    "jinja2>=3.1.4",
+    "weasyprint>=63.0",
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "python-dotenv>=1.0.1",
+    "structlog>=24.4.0",
+    "typer>=0.15.0",
+]
+
+[project.scripts]
+job-apply = "src.run:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
