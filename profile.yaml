@@ -17,7 +17,7 @@ personal:
 
 work_authorization:
   canada: "citizen"          
-  us: "no"     # need_sponsorship
+  us: "need_sponsorship"
   willing_to_relocate: true  
   remote_preference: "flexible"  # remote / hybrid / onsite / flexible
 
@@ -81,8 +81,12 @@ projects:
 
   - name: "Job Apply Agent"
     url: "https://github.com/Austin-FV/job-apply-agent"
-    summary: "AI agent that scrapes JDs, tailors resumes, and fills ATS forms end-to-end."
-    tech: ["Claude API", "browser-use", "Python", "Playwright"]
+    summary: "End-to-end AI agent that scrapes a job posting, generates a tailored resume and cover letter, and drives a browser to fill the ATS application form."
+    achievements:
+      - "Built an end-to-end AI agent that scrapes JD postings, tailors resumes and cover letters via Claude Sonnet 4.6, and autonomously fills ATS forms"
+      - "Engineered an anti-hallucination system in Pydantic that ties every generated bullet to a real profile achievement, rejecting fabrications at parse time"
+      - "Designed a typed pipeline (JobPosting → ResumeContent → PDF) with Pydantic schemas, Jinja2 templates, and Playwright for HTML-to-PDF rendering"
+    tech: ["Python", "Claude API", "browser-use", "Playwright", "Pydantic", "Jinja2", "LangChain"]
     tags: ["ai-ops", "agents", "automation", "llm"]
 
   - name: "gimmit"
@@ -170,10 +174,10 @@ narrative:
     - "Pulling LLMs into developer tooling — gimmit uses Anthropic/OpenAI to ground commit messages in actual diffs"
 
   why_im_looking: |
-    # Looking to move from test automation into product engineering, ideally on a
-    # team building AI-powered tooling. I want to deepen my system design and
-    # architecture chops while shipping things users actually touch — and work
-    # alongside people I can learn from.
+    Looking to move from test automation into product engineering, ideally on a
+    team building AI-powered tooling. I want to deepen my system design and
+    architecture chops while shipping things users actually touch — and work
+    alongside people I can learn from.
 
   # personal_color: |
   #   # Optional but useful for "tell us about yourself" or casual culture-fit prompts.

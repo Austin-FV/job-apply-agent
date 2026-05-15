@@ -10,9 +10,8 @@ from dotenv import load_dotenv
 
 from src.schemas import Profile
 
-load_dotenv()
-
 ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(ROOT / ".env", override=True)
 TEMPLATES_DIR = ROOT / "templates"
 RUNS_DIR = ROOT / "runs"
 PROMPTS_DIR = ROOT / "src" / "prompts"

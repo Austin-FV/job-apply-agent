@@ -1,96 +1,118 @@
 @page {
   size: Letter;
-  margin: 0.6in 0.7in;
+  margin: 0.5in 0.55in;
 }
 
 body {
-  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 10.5pt;
-  line-height: 1.4;
-  color: #1a1a1a;
+  font-family: "Latin Modern Roman", Georgia, "Times New Roman", Times, serif;
+  font-size: 10pt;
+  line-height: 1.25;
+  color: #000;
+  margin: 0;
 }
 
 a {
-  color: #1a1a1a;
-  text-decoration: none;
+  color: #000;
+  text-decoration: underline;
 }
 
-h1 {
-  font-size: 20pt;
-  margin: 0 0 2px 0;
+/* === Header === */
+
+.resume-header {
+  text-align: center;
+  margin: 0 0 4px 0;
 }
+
+.resume-header h1 {
+  font-size: 20pt;
+  font-weight: normal;
+  margin: 0 0 1px 0;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.resume-header .contact {
+  font-size: 9.5pt;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* === Section headings === */
 
 h2 {
+  font-variant: small-caps;
   font-size: 11pt;
-  text-transform: uppercase;
+  font-weight: bold;
   letter-spacing: 1px;
-  border-bottom: 1px solid #1a1a1a;
-  padding-bottom: 2px;
-  margin: 14px 0 6px 0;
+  border-bottom: 0.75pt solid #000;
+  margin: 5px 0 2px 0;
+  padding-bottom: 1px;
 }
 
-p {
-  margin: 4px 0;
+/* === Entries (education, experience, projects) === */
+
+.entry {
+  margin: 3px 0 5px 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.row strong {
+  font-size: 10.5pt;
+}
+
+.row em {
+  font-style: italic;
+}
+
+.meta {
+  font-size: 10pt;
+  white-space: nowrap;
 }
 
 ul {
-  margin: 4px 0 6px 18px;
+  margin: 1px 0 2px 16px;
   padding: 0;
 }
 
 li {
-  margin: 2px 0;
+  margin: 1px 0;
 }
 
-.resume-header,
-.cover-header {
-  margin-bottom: 8px;
+/* === Skills section: 4 compact lines === */
+
+.skills p {
+  margin: 1px 0;
+  font-size: 10pt;
 }
 
-.headline {
+/* === Cover letter === */
+
+body.cover {
+  font-family: "Latin Modern Roman", Georgia, "Times New Roman", Times, serif;
   font-size: 11pt;
-  color: #555;
-  margin: 0 0 4px 0;
+  line-height: 1.4;
 }
 
-.contact {
-  font-size: 9.5pt;
-  color: #444;
+.cover-header {
+  margin-bottom: 14px;
+}
+
+.cover-header h1 {
+  font-size: 16pt;
+  font-weight: normal;
+  margin: 0 0 2px 0;
+}
+
+.cover-header .contact {
+  font-size: 10pt;
   margin: 0;
-}
-
-.entry {
-  margin: 6px 0 8px 0;
-}
-
-.entry-head {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.entry-head strong {
-  font-size: 10.5pt;
-}
-
-.meta {
-  font-size: 9.5pt;
-  color: #555;
-}
-
-dl.skills {
-  margin: 4px 0;
-}
-
-dl.skills dt {
-  font-weight: 600;
-  float: left;
-  width: 110px;
-  clear: left;
-}
-
-dl.skills dd {
-  margin: 0 0 4px 110px;
+  color: #333;
 }
 
 body.cover p {
@@ -98,8 +120,8 @@ body.cover p {
 }
 
 .date-line {
-  color: #555;
   margin-bottom: 16px;
+  color: #333;
 }
 
 .signoff {

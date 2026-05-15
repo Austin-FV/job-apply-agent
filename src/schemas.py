@@ -170,13 +170,11 @@ class ResumeExperience(BaseModel):
 class ResumeProject(BaseModel):
     name: str
     url: HttpUrl | None = None
-    one_liner: str
+    tech: list[str]
     bullets: list[ResumeBullet]
 
 
 class ResumeContent(BaseModel):
-    headline: str
-    summary: str
     experience: list[ResumeExperience]
     projects: list[ResumeProject]
     skills_grouped: dict[str, list[str]]

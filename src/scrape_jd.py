@@ -70,12 +70,27 @@ def _split_bullets_under(md: str, headings: list[str]) -> list[str]:
 
 
 _TECH_KEYWORDS = {
-    "python", "java", "javascript", "typescript", "go", "rust", "c++", "c#",
+    # Languages
+    "python", "java", "javascript", "typescript", "go", "rust", "c++", "c#", "sql",
+    # Web frameworks
     "react", "next.js", "node.js", "express", "flask", "django", "fastapi",
+    # Test / automation
     "selenium", "playwright", "cypress", "junit", "pytest",
+    # Cloud / infra
     "aws", "gcp", "azure", "docker", "kubernetes", "terraform",
+    # Databases / data
     "postgresql", "mysql", "mongodb", "redis", "snowflake", "bigquery",
-    "anthropic", "openai", "llm", "claude", "gpt", "rag", "langchain",
+    "databricks", "dbt", "airflow",
+    # AI / LLM platforms
+    "anthropic", "openai", "llm", "llms", "claude", "gpt", "rag", "langchain",
+    "langgraph", "mcp", "agentic", "vector database", "embeddings",
+    # AI coding assistants
+    "claude code", "cursor", "copilot", "windsurf",
+    # AI rapid prototyping / no-code
+    "lovable", "replit", "v0", "bolt", "figma",
+    # Workflow automation platforms
+    "gumloop", "zapier", "n8n", "make.com", "retool",
+    # DevOps
     "ci/cd", "github actions", "jenkins",
 }
 
@@ -105,11 +120,11 @@ async def scrape(url: str, run_dir: Path) -> JobPosting:
     raw_html_path = run_dir / "jd.html"
     raw_html_path.write_text(html, encoding="utf-8")
 
+    soup = BeautifulSoup(html, "html.parser")
     description_raw = _html_to_text(html)
     description_md = _html_to_markdown(html)
 
-    # Best-effort field extraction — refine per-source as you encounter them.
-    title, company = _parse_title_company(title_tag, html, source)
+    title, company = _parse_title_company(title_tag, soup)
     requirements = _split_bullets_under(
         description_md, ["requirement", "qualification", "what you", "you have", "you'll need"]
     )
@@ -118,6 +133,7 @@ async def scrape(url: str, run_dir: Path) -> JobPosting:
     )
     location, remote_policy = _parse_location(html)
     keywords = _extract_keywords(description_raw)
+    apply_url = _find_apply_url(url, source, soup)
 
     return JobPosting(
         url=url,
@@ -133,24 +149,85 @@ async def scrape(url: str, run_dir: Path) -> JobPosting:
         requirements=requirements,
         responsibilities=responsibilities,
         keywords=keywords,
-        apply_url=url,  # refine if the posting links out to a separate form
+        apply_url=apply_url,
         scraped_at=datetime.now(),
         raw_html_path=raw_html_path,
     )
 
 
-def _parse_title_company(page_title: str, html: str, source: str) -> tuple[str, str]:
-    """Heuristic. Page titles tend to be 'Role - Company' or 'Company | Role'."""
-    if " - " in page_title:
-        a, b = page_title.split(" - ", 1)
-        return a.strip(), b.strip()
-    if " | " in page_title:
-        a, b = page_title.split(" | ", 1)
-        return a.strip(), b.strip()
-    if " at " in page_title:
-        a, b = page_title.split(" at ", 1)
-        return a.strip(), b.strip()
-    return page_title.strip(), "Unknown"
+def _meta(soup: BeautifulSoup, *keys: str) -> str | None:
+    """Look up <meta property=... content=...> or <meta name=... content=...>."""
+    for key in keys:
+        tag = soup.find("meta", attrs={"property": key}) or soup.find(
+            "meta", attrs={"name": key}
+        )
+        if tag and tag.get("content"):
+            return tag["content"].strip()
+    return None
+
+
+def _split_role_company(text: str) -> tuple[str, str] | None:
+    """Pull (role, company) from a string with a common separator. Returns None on miss."""
+    for sep in (" | ", " - ", " — ", " at "):
+        if sep in text:
+            a, b = text.split(sep, 1)
+            return a.strip(), b.strip()
+    return None
+
+
+def _parse_title_company(page_title: str, soup: BeautifulSoup) -> tuple[str, str]:
+    """Resolve (title, company) from meta tags first, then <title>, then logo alt."""
+    og_title = _meta(soup, "og:title", "twitter:title")
+    if og_title:
+        parts = _split_role_company(og_title)
+        if parts:
+            return parts
+
+    site_name = _meta(soup, "og:site_name", "application-name")
+
+    parts = _split_role_company(page_title)
+    if parts:
+        return parts
+
+    # Final fallback: logo alt text often holds the company name.
+    company = site_name or "Unknown"
+    if company == "Unknown":
+        for img in soup.find_all("img"):
+            alt = (img.get("alt") or "").strip()
+            if alt and len(alt) < 40 and "logo" not in alt.lower():
+                company = alt
+                break
+
+    return page_title.strip() or "Unknown", company
+
+
+def _find_apply_url(posting_url: str, source: str, soup: BeautifulSoup) -> str:
+    """Find the apply form URL.
+
+    Strategy:
+    1. Scan anchors for an 'Apply'-text link with a real href (Greenhouse, Lever, generic).
+    2. If none, fall back to per-ATS URL construction (Rippling uses a JS button).
+    3. Last resort: the posting URL itself (handles inline forms like Greenhouse).
+    """
+    from urllib.parse import urljoin
+
+    for a in soup.find_all("a", href=True):
+        text = (a.get_text(strip=True) or "").lower()
+        if "apply" in text and len(text) < 30:
+            href = a["href"]
+            if href and not href.startswith("#"):
+                return urljoin(posting_url, href)
+
+    if source == "rippling":
+        sep = "&" if "?" in posting_url else "?"
+        if "/apply" not in posting_url:
+            return f"{posting_url}/apply?step=application"
+        if "step=" not in posting_url:
+            return f"{posting_url}{sep}step=application"
+    elif source == "lever" and "/apply" not in posting_url:
+        return posting_url.rstrip("/") + "/apply"
+
+    return posting_url
 
 
 def _parse_location(html: str) -> tuple[str | None, str | None]:
