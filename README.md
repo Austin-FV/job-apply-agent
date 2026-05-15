@@ -8,7 +8,7 @@ $ uv run job-apply apply <posting-url> --reveal-agent
 
 > This repo was built to apply to Opendoor's [Operations AI Engineer role in Toronto](https://ats.rippling.com/en-CA/opendoor/jobs/f572e889-0644-4590-8a5a-64f73d7db17d) in response to [Kaz Nejatian's challenge](https://x.com/nejatian/status/2054547638997966976): apply using only AI, explain how you did it, extra points for creativity. The artifacts of that exact run are committed under [`runs/`](runs/) so you can inspect what the agent actually produced.
 
-<!-- TODO: embed a 60-90 second screen recording of the agent filling the form here. The video file is at runs/<latest>/video/. -->
+<!-- TODO: embed the agent-run GIF here. Generated automatically at runs/<latest>/form_run.gif — an annotated step-by-step of the agent filling the ATS form. -->
 
 ## What it does
 
@@ -17,12 +17,50 @@ $ uv run job-apply apply <posting-url> --reveal-agent
    │ scrape_jd.py │ ─► │ generate_docs.py │ ─► │  fill_form.py  │
    └──────────────┘    └──────────────────┘    └────────────────┘
    Playwright +        Claude Sonnet 4.6        browser-use agent
-   BeautifulSoup       resume JSON + cover      driving Chromium
-                       prose, rendered to       via LangChain
-                       PDF via Playwright       ChatAnthropic
+   BeautifulSoup       resume JSON + cover      driving Chromium,
+   ATS detection       prose, rendered to       Claude Sonnet 4.6
+   keyword extract     PDF via Playwright       as the brain
 ```
 
 Three stages, each with a typed contract between them. From `JobPosting` → `ResumeContent` → rendered PDFs → filled form, every boundary is a Pydantic schema. That's what makes the output trustworthy enough to actually submit.
+
+## Capabilities
+
+**JD scraping** ([`scrape_jd.py`](src/scrape_jd.py))
+- Renders JS-heavy ATS pages with Playwright (no empty-shell HTML problem)
+- Detects the ATS source (Rippling / Greenhouse / Lever / Workday / generic)
+- Extracts company + title from `og:` meta tags with `<title>` and logo-alt fallbacks
+- Auto-derives the apply-form URL: scrapes the apply anchor, falls back to per-ATS URL patterns when the button is JS-driven (Rippling)
+- Pulls requirements/responsibilities bullets and an AI-tooling-aware keyword set (Claude Code, Cursor, MCP, Gumloop, Replit, Snowflake, …) for cheap relevance matching before any LLM call
+- Saves raw HTML for replay; scrapes are reproducible
+
+**Resume tailoring** ([`generate_docs.py`](src/generate_docs.py), [`resume_tailor.md`](src/prompts/resume_tailor.md))
+- Claude Sonnet 4.6 returns a structured `ResumeContent` JSON, not freeform text
+- **Anti-hallucination**: every bullet carries a `source_tag` validated by Pydantic — the model cannot invent experience (see design decision #1)
+- Selects and lightly edits from real profile achievements; never fabricates metrics
+- One-page Jake's-style layout with a page budget the prompt enforces (≤4 bullets/role, 3–4 projects), tuned to ~90% fill
+- `keywords_covered` audit field reports which JD keywords actually landed in the resume
+
+**Cover letter** ([`cover_letter.md`](src/prompts/cover_letter.md))
+- Two modes: **default** (standard letter in the candidate's voice) and **agent-reveal** (`--reveal-agent`: leads with the agent disclosure, technical architecture, repo link — for submissions where the agent itself is the signal)
+- Grounded in `profile.narrative`; no invented experiences
+
+**PDF rendering**
+- Jinja2 → HTML → PDF via Playwright's `page.pdf()`. Zero native dependencies (replaced WeasyPrint after Windows GTK pain — see git history)
+- Shared print stylesheet inlined into the HTML so rendering is self-contained
+
+**ATS form filling** ([`fill_form.py`](src/fill_form.py))
+- A `browser-use` agent driven by Claude Sonnet 4.6 (browser-use's native client) fills any ATS form — one code path, no per-site scripts
+- Checklist-driven, **form-agnostic**: fills whatever fields a given form actually has; treats absent fields as normal; uses the Apply-button-enabled state as the completion signal
+- Uploads resume + cover letter via an explicit file-path allowlist (browser-use security requirement)
+- Generates an annotated **GIF of the entire run** (`form_run.gif`) — each step with the agent's goal overlaid
+- Two submission modes: **review-stop** (default — fills the form, stops before submit for human verification) and **`--autonomous`** (clicks submit, captures the confirmation page)
+
+**Run management** ([`run.py`](src/run.py))
+- Every run is a self-contained, timestamped dir under `runs/` — JD, JSON outputs, PDFs, agent trace, GIF
+- `--use-run <id>|latest` reuses prior docs and only re-runs the form fill, in a fresh isolated dir (the source dir stays read-only) — cheap iteration on form-fill without re-spending on doc generation
+- `scrape-only <url>` subcommand for debugging the scraper in isolation
+- Structured JSON logging throughout (`structlog`)
 
 ## Three design decisions worth calling out
 
@@ -64,10 +102,11 @@ The form-fill task lives in [`src/fill_form.py`](src/fill_form.py); the field-ma
 
 - **Python 3.11+**, `uv` for deps
 - **Claude Sonnet 4.6** via the `anthropic` SDK for resume and cover letter generation
-- **`browser-use`** + **`langchain-anthropic`** for the ATS form-filling agent
+- **`browser-use`** for the ATS form-filling agent, using its native Claude client (the LangChain integration was dropped after an API-contract break — `browser-use` walked away from the LangChain ecosystem mid-development; the git history has the debugging trail)
 - **Playwright** for JD scraping and HTML → PDF rendering
 - **Pydantic v2** for every typed contract in the pipeline
 - **Jinja2** templates rendering a Jake's-style resume layout
+- **Typer** CLI, **structlog** for run logs
 
 ## Quickstart
 
@@ -81,25 +120,36 @@ cp .env.example .env
 
 # customize profile.yaml for your background
 # then:
-uv run job-apply apply <posting-url> --skip-form     # generate docs only
+uv run job-apply apply <posting-url> --skip-form      # generate docs only
 uv run job-apply apply <posting-url>                  # + fill form, stop before submit
 uv run job-apply apply <posting-url> --autonomous     # + click submit
 uv run job-apply apply <posting-url> --reveal-agent   # cover letter leads with agent disclosure
+
+# iterate on the form fill without re-spending on doc generation:
+uv run job-apply apply --use-run latest               # reuse latest run's docs, fresh form-fill dir
+uv run job-apply apply --use-run <run-id> --autonomous
+
+# debug the scraper in isolation:
+uv run job-apply scrape-only <posting-url>
 ```
+
+Flags compose: `--reveal-agent --autonomous` is the full closed-loop submission (agent-disclosing cover letter + the agent submitting itself).
 
 Each run lands in `runs/<timestamp>-<company>-<role>/`:
 
 ```
-runs/20260515-013040-opendoor-operations-ai-engineer/
+runs/20260515-165420-opendoor-operations-ai-engineer/   ← the committed submission run
 ├── jd.html, jd.json          scraped JD + parsed JobPosting
-├── resume.json               LLM-tailored ResumeContent (audit trail)
+├── resume.json               LLM-tailored ResumeContent (audit trail with source_tags)
 ├── resume.html, resume.pdf   final resume
 ├── cover_letter.md, .pdf     cover letter
 ├── form_task.md              task prompt handed to browser-use
 ├── form_log.jsonl            agent step-by-step trace
 ├── form_result.json          final URL, step count, errors
-└── video/                    Playwright screen recording of the run
+└── form_run.gif              annotated GIF of the agent filling the form
 ```
+
+Each dir is self-contained — hand someone a run dir and they have the full picture of that application. `--use-run` copies `jd.json` + both PDFs into the new dir so form-fill retries are independently inspectable.
 
 ## Layout
 

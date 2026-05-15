@@ -42,39 +42,18 @@ YOUR GOAL:
 4. Upload the resume and cover letter PDFs at the indicated paths.
 {submit_clause}
 
-COMPLETENESS CHECKLIST — before you claim done, verify EVERY item below has been addressed. If any required field is unfilled, the Apply/Submit button will be disabled — that is your signal you missed something. Scroll back and find it.
+FIELD REFERENCE — the form MAY contain any subset of the fields below. It is normal and expected that a given ATS only asks for some of these. Fill every field that is PRESENT on the form using the data above. Do NOT treat an absent field as a problem, do NOT hunt for fields that aren't there, and do NOT report missing fields as a failure — many ATS forms are intentionally short.
 
-Personal:
-  [ ] First name, last name, preferred name, email, phone
-  [ ] Location (city + province/state + country, may be a single autocomplete field)
-  [ ] LinkedIn, GitHub, Portfolio (all three URLs)
-  [ ] Current company (if asked)
+Possible fields (fill the ones that exist):
+  - Personal: first name, last name, preferred name, email, phone, location, LinkedIn, GitHub, portfolio, current company
+  - Work authorization: authorized to work, requires sponsorship, US status, willing to relocate, remote preference
+  - Screening: years of experience, desired salary, notice period, start date, how did you hear, assessment willingness, background check consent, any custom questions
+  - Files: resume PDF, cover letter PDF (verify the filename appears on the form, not "No file chosen")
+  - Demographics/EEO (optional): fill from the data, or select "prefer not to say"; never invent
 
-Work authorization (these are usually radio buttons or dropdowns):
-  [ ] Authorized to work in Canada
-  [ ] Requires sponsorship in Canada
-  [ ] US work status (separate question on many forms)
-  [ ] Willing to relocate
-  [ ] Remote work preference
+COMPLETION SIGNAL — the form is complete when the Apply/Submit button is ENABLED (not greyed out). A disabled button means a required field on the form is still empty: scroll the whole form and find it. An enabled button means every required field this form actually has is filled — you are done, regardless of which optional fields exist. Trust the button state over any expectation of what fields "should" be there.
 
-Screening questions (often scattered through the form):
-  [ ] Years of experience
-  [ ] Desired salary
-  [ ] Notice period
-  [ ] Earliest start date
-  [ ] How did you hear about us
-  [ ] Willing to complete assessment / take-home
-  [ ] Comfortable with background check
-  [ ] Any custom screening questions the company added
-
-Files:
-  [ ] Resume PDF uploaded (verify the filename shows on the form, not "No file chosen")
-  [ ] Cover letter PDF uploaded (same verification)
-
-Demographics / EEO (optional — use the data; never invent):
-  [ ] Each field either filled or set to "prefer not to say"
-
-After filling: scroll the entire form one more time to confirm no field shows an error/required indicator. The Apply button being ENABLED is the strongest signal completeness has been reached.
+Before finishing: scroll the full form once to confirm no field shows a red/required error indicator. The GIF of your run is captured automatically — a manual screenshot is a nice-to-have, not required; if your screenshot tool produces a PDF that is acceptable.
 
 APPLICANT DATA:
 - Full name: {p.full_name}
@@ -141,20 +120,17 @@ async def fill_application(
     task = _build_task(profile, posting, resume_pdf, cover_pdf, autonomous)
     (run_dir / "form_task.md").write_text(task, encoding="utf-8")
 
-    video_dir = run_dir / "video"
-    video_dir.mkdir(exist_ok=True)
+    gif_path = run_dir / "form_run.gif"
 
     llm = ChatAnthropic(model=ANTHROPIC_MODEL, api_key=ANTHROPIC_API_KEY, temperature=0)
-    browser = Browser(
-        headless=BROWSER_USE_HEADLESS,
-        record_video_dir=video_dir,
-    )
+    browser = Browser(headless=BROWSER_USE_HEADLESS)
 
     agent = Agent(
         task=task,
         llm=llm,
         browser=browser,
         available_file_paths=[str(resume_pdf), str(cover_pdf)],
+        generate_gif=str(gif_path),
         save_conversation_path=str(run_dir / "form_log.jsonl"),
     )
 
@@ -166,7 +142,7 @@ async def fill_application(
         "final_url": history.urls()[-1] if history.urls() else None,
         "n_steps": len(history.history),
         "errors": history.errors() if hasattr(history, "errors") else [],
-        "video_dir": str(video_dir),
+        "gif": str(gif_path) if gif_path.exists() else None,
     }
     (run_dir / "form_result.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
