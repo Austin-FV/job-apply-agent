@@ -1,12 +1,60 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from browser_use import Agent, Browser
+from browser_use.agent.gif import _add_overlay_to_image, create_history_gif
 from browser_use.llm import ChatAnthropic
+from imageio_ffmpeg import get_ffmpeg_exe
 
-from src.config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL, BROWSER_USE_HEADLESS, load_prompt
+# browser-use's GIF overlay defaults to a fully-opaque black box behind the
+# step number and goal text. That hides whatever browser content sits behind
+# it. Patch the function's default text_box_color from alpha=255 to alpha=180
+# (≈70% opaque) so the screenshot bleeds through and no step is fully hidden.
+_defaults = list(_add_overlay_to_image.__defaults__ or ())
+_defaults[-1] = (0, 0, 0, 180)  # text_box_color = semi-transparent black
+_add_overlay_to_image.__defaults__ = tuple(_defaults)
+
+
+def _trim_video_intro(video_path: Path, skip_seconds: float) -> None:
+    """Trim the first `skip_seconds` off the recorded form-fill video.
+
+    The recording starts when Chromium connects to CDP, which is several seconds
+    before the agent actually navigates to the apply URL — the front of the
+    video is browser launch / new-tab animations. Skip past it.
+
+    Uses the ffmpeg binary bundled with imageio-ffmpeg. No re-encode (-c copy)
+    so the trim is fast and lossless.
+    """
+    ffmpeg = get_ffmpeg_exe()
+    trimmed = video_path.with_name(video_path.stem + ".trimmed" + video_path.suffix)
+    result = subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-ss", str(skip_seconds),
+            "-i", str(video_path),
+            "-c", "copy",
+            str(trimmed),
+        ],
+        capture_output=True,
+    )
+    if result.returncode == 0 and trimmed.exists() and trimmed.stat().st_size > 0:
+        trimmed.replace(video_path)
+    else:
+        # Trim failed (very short video, weird codec, etc.) — leave the original.
+        if trimmed.exists():
+            trimmed.unlink()
+
+from src.config import (
+    ANTHROPIC_API_KEY,
+    ANTHROPIC_FILL_MODEL,
+    BROWSER_USE_HEADLESS,
+    VIDEO_INTRO_TRIM_SECONDS,
+    load_prompt,
+)
 from src.schemas import JobPosting, Profile
 
 
@@ -97,7 +145,6 @@ RULES:
 - For optional demographic/EEO fields, use the values above. If a value is
   "prefer_not_to_say", select that option if available, otherwise leave blank.
 - Treat dropdowns as fuzzy: pick the closest matching option to the data above.
-- Save a screenshot when you reach the review step.
 """
 
 
@@ -108,34 +155,87 @@ async def fill_application(
     cover_pdf: Path,
     run_dir: Path,
     autonomous: bool = False,
+    record: bool = False,
 ) -> dict:
     """Drive the browser-use agent to fill the application form.
 
     Default: stops at the review step before submission so the human can verify
     and click submit. Pass autonomous=True to let the agent click submit itself.
 
-    Full trace lives in run_dir/form_log.jsonl. A screen recording of the run
-    is saved to run_dir/video/.
+    An annotated GIF of the agent's steps is always written to
+    run_dir/form_run.gif. When record=True, a continuous MP4 of the whole
+    session is also written to run_dir/form_run.mp4. The full agent trace
+    lives in run_dir/form_log.jsonl regardless.
     """
     task = _build_task(profile, posting, resume_pdf, cover_pdf, autonomous)
     (run_dir / "form_task.md").write_text(task, encoding="utf-8")
 
     gif_path = run_dir / "form_run.gif"
+    # Recording is opt-in: the annotated GIF is essentially free (stitched from
+    # screenshots the agent already captured), but the continuous MP4 adds
+    # CDP screencast + imageio encoding + trim overhead. Only useful for demos.
+    video_dir: Path | None = None
+    if record:
+        video_dir = run_dir / "video"
+        video_dir.mkdir(exist_ok=True)
 
-    llm = ChatAnthropic(model=ANTHROPIC_MODEL, api_key=ANTHROPIC_API_KEY, temperature=0)
-    browser = Browser(headless=BROWSER_USE_HEADLESS)
+    llm = ChatAnthropic(
+        model=ANTHROPIC_FILL_MODEL, api_key=ANTHROPIC_API_KEY, temperature=0
+    )
+    # Smaller window → smaller screenshots → faster vision call on every step.
+    browser_kwargs: dict = {
+        "headless": BROWSER_USE_HEADLESS,
+        "window_size": {"width": 1280, "height": 800},
+    }
+    if record:
+        browser_kwargs["record_video_dir"] = video_dir
+    browser = Browser(**browser_kwargs)
 
     agent = Agent(
         task=task,
         llm=llm,
         browser=browser,
         available_file_paths=[str(resume_pdf), str(cover_pdf)],
-        generate_gif=str(gif_path),
+        # We render the GIF ourselves after run() so we can drop the unreadable
+        # task-text frame and tighten per-step duration.
         save_conversation_path=str(run_dir / "form_log.jsonl"),
     )
 
     history = await agent.run(max_steps=60 if autonomous else 50)
     await browser.stop()
+
+    # Render the run-through GIF. Pass a SHORT task summary instead of the full
+    # checklist (the full task would be an unreadable wall of text on frame 1).
+    # browser-use also drops about:blank screenshots, which can make labels look
+    # like they start at "Step 2" — an intro slate sets context cleanly.
+    # Default per-step duration is 3s; 1.2s makes the run watchable as an embed.
+    gif_task = f"Apply to {posting.title} at {posting.company}"
+    create_history_gif(
+        task=gif_task,
+        history=history,
+        output_path=str(gif_path),
+        show_task=True,
+        duration=1200,
+    )
+
+    # browser-use writes the recording via CDP screencast + imageio. Default
+    # format is MP4 but configurable; accept either. Rename to a stable filename
+    # at the run-dir root so README links and other tooling can rely on the path.
+    video_path: Path | None = None
+    if record and video_dir is not None:
+        candidates = list(video_dir.glob("*.mp4")) + list(video_dir.glob("*.webm"))
+        if candidates:
+            suffix = candidates[0].suffix
+            video_path = run_dir / f"form_run{suffix}"
+            candidates[0].replace(video_path)
+            try:
+                video_dir.rmdir()  # empty now; keep the run dir flat
+            except OSError:
+                pass  # leave it if other files snuck in
+
+            # Trim the browser-launch lead-in so the video starts at real work.
+            if VIDEO_INTRO_TRIM_SECONDS > 0:
+                _trim_video_intro(video_path, VIDEO_INTRO_TRIM_SECONDS)
 
     summary = {
         "autonomous": autonomous,
@@ -143,6 +243,7 @@ async def fill_application(
         "n_steps": len(history.history),
         "errors": history.errors() if hasattr(history, "errors") else [],
         "gif": str(gif_path) if gif_path.exists() else None,
+        "video": str(video_path) if video_path else None,
     }
     (run_dir / "form_result.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary

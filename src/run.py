@@ -30,6 +30,13 @@ def apply(
         help="Cover letter leads with the agent reveal (architecture, repo link). "
         "Use for submissions where the agent itself is the lead signal.",
     ),
+    record: bool = typer.Option(
+        False,
+        "--record",
+        help="Record a continuous MP4 of the form-fill session (for demos). "
+        "Off by default — the annotated GIF is always generated and is "
+        "enough for normal iteration.",
+    ),
     use_run: str = typer.Option(
         None,
         "--use-run",
@@ -41,7 +48,7 @@ def apply(
     """End-to-end: scrape JD, generate tailored resume + cover letter, fill form."""
     if use_run is None and url is None:
         raise typer.BadParameter("Either URL or --use-run must be provided.")
-    asyncio.run(_apply_async(url, skip_form, autonomous, reveal_agent, use_run))
+    asyncio.run(_apply_async(url, skip_form, autonomous, reveal_agent, record, use_run))
 
 
 async def _apply_async(
@@ -49,6 +56,7 @@ async def _apply_async(
     skip_form: bool,
     autonomous: bool,
     reveal_agent: bool,
+    record: bool,
     use_run: str | None,
 ) -> None:
     from src.fill_form import fill_application
@@ -108,9 +116,10 @@ async def _apply_async(
         log.info("skipping_form")
         return
 
-    log.info("filling_form", autonomous=autonomous)
+    log.info("filling_form", autonomous=autonomous, record=record)
     result = await fill_application(
-        profile, posting, resume_pdf, cover_pdf, run_dir, autonomous=autonomous
+        profile, posting, resume_pdf, cover_pdf, run_dir,
+        autonomous=autonomous, record=record,
     )
     log.info("form_filled", **{k: v for k, v in result.items() if k != "errors"})
     print(json.dumps(result, indent=2))

@@ -19,7 +19,14 @@ PROFILE_PATH = ROOT / "profile.yaml"
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+# Separate knob for the browser-use form-fill agent. Defaults to the same
+# model as doc-gen; override to experiment with cheaper or larger models.
+ANTHROPIC_FILL_MODEL = os.environ.get("ANTHROPIC_FILL_MODEL", "claude-sonnet-4-6")
 BROWSER_USE_HEADLESS = os.environ.get("BROWSER_USE_HEADLESS", "false").lower() == "true"
+# Seconds to trim off the start of the recorded form-fill video — covers the
+# browser launch + Chrome new-tab lead-in before the agent's first navigation.
+# Bump if your runs still show loading-screen content at the start.
+VIDEO_INTRO_TRIM_SECONDS = float(os.environ.get("VIDEO_INTRO_TRIM_SECONDS", "5.0"))
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
 

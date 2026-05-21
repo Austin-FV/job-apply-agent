@@ -15,7 +15,11 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "structlog>=24.4.0",
     "typer>=0.15.0",
-    "langchain-anthropic>=1.4.3",
+    # Optional in browser-use, but required for the CDP-screencast video recording.
+    # Without these, RecordingWatchdog silently does nothing.
+    "imageio>=2.34.0",
+    "imageio-ffmpeg>=0.5.0",
+    "numpy>=1.26.0",
 ]
 
 [project.scripts]

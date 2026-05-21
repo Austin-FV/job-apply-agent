@@ -1,0 +1,150 @@
+{
+  "experience": [
+    {
+      "company": "Express Scripts Canada",
+      "title": "Automation Engineer",
+      "location": "Mississauga, ON",
+      "start": "2024-03",
+      "end": "present",
+      "bullets": [
+        {
+          "text": "Designed and scaled a Java automation framework with Selenium, JUnit, Cucumber (BDD), and Maven; built 25+ reusable components that expanded regression coverage and cut manual QA by 75%",
+          "source_tag": "experience:Express Scripts Canada:1"
+        },
+        {
+          "text": "Automated API and data validation with REST assertions and Oracle SQL across 50+ endpoints, ensuring consistency between services and databases",
+          "source_tag": "experience:Express Scripts Canada:2"
+        },
+        {
+          "text": "Engineered a data provisioning tool generating 1,000+ test users in staging, enabling large-scale performance validation under production-like conditions",
+          "source_tag": "experience:Express Scripts Canada:0"
+        },
+        {
+          "text": "Identified high-risk edge cases through developer code reviews, reducing post-release defects by 30% across 10+ release cycles",
+          "source_tag": "experience:Express Scripts Canada:3"
+        }
+      ]
+    },
+    {
+      "company": "Hammond Power Solutions",
+      "title": "Software Developer Intern",
+      "location": "Guelph, ON",
+      "start": "2021-05",
+      "end": "2022-04",
+      "bullets": [
+        {
+          "text": "Improved operational efficiency by 50% across North American operations through workflow automation",
+          "source_tag": "experience:Hammond Power Solutions:4"
+        },
+        {
+          "text": "Built a custom issue-tracking system managing 100+ internal requests, streamlining intake and categorization",
+          "source_tag": "experience:Hammond Power Solutions:1"
+        },
+        {
+          "text": "Integrated custom SharePoint forms with Excel reporting, eliminating 80% of manual entry errors",
+          "source_tag": "experience:Hammond Power Solutions:2"
+        },
+        {
+          "text": "Automated form validation and email notifications, cutting average request response time by 40%",
+          "source_tag": "experience:Hammond Power Solutions:3"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Job Apply Agent",
+      "url": "https://github.com/Austin-FV/job-apply-agent",
+      "tech": ["Python", "Claude API", "Playwright", "Pydantic", "LangChain"],
+      "bullets": [
+        {
+          "text": "Built an end-to-end AI agent that scrapes JD postings, tailors resumes and cover letters via Claude Sonnet, and autonomously fills ATS forms",
+          "source_tag": "project:Job Apply Agent:0"
+        },
+        {
+          "text": "Engineered an anti-hallucination system in Pydantic that ties every generated bullet to a real profile achievement, rejecting fabrications at parse time",
+          "source_tag": "project:Job Apply Agent:1"
+        },
+        {
+          "text": "Designed a typed pipeline (JobPosting → ResumeContent → PDF) with Pydantic schemas, Jinja2 templates, and Playwright for HTML-to-PDF rendering",
+          "source_tag": "project:Job Apply Agent:2"
+        }
+      ]
+    },
+    {
+      "name": "gimmit",
+      "url": "https://github.com/Austin-FV/gimmit",
+      "tech": ["TypeScript", "Anthropic API", "OpenAI API", "VS Code API"],
+      "bullets": [
+        {
+          "text": "Built a VS Code extension that reads git diffs and generates conventional commit messages, eliminating the friction of writing commits manually",
+          "source_tag": "project:gimmit:0"
+        },
+        {
+          "text": "Integrated Anthropic and OpenAI APIs for AI-generated commit descriptions grounded in actual diff content",
+          "source_tag": "project:gimmit:1"
+        },
+        {
+          "text": "Published as a developer tool that fits into existing git workflows without disrupting them",
+          "source_tag": "project:gimmit:2"
+        }
+      ]
+    },
+    {
+      "name": "touchline.ai",
+      "url": "https://github.com/Austin-FV/touchline",
+      "tech": ["React", "Express", "PostgreSQL", "Supabase"],
+      "bullets": [
+        {
+          "text": "Developed 20+ REST APIs with JWT-based authentication and role-based authorization using Express",
+          "source_tag": "project:touchline.ai:0"
+        },
+        {
+          "text": "Designed normalized PostgreSQL schemas and migrations to support multi-tenant team and session data",
+          "source_tag": "project:touchline.ai:1"
+        },
+        {
+          "text": "Integrated cloud storage via Supabase for secure media uploads and team asset management",
+          "source_tag": "project:touchline.ai:2"
+        }
+      ]
+    },
+    {
+      "name": "AWS S3 Management Shell",
+      "url": "https://github.com/Austin-FV/aws-s3-shell",
+      "tech": ["Python", "Boto3", "AWS S3"],
+      "bullets": [
+        {
+          "text": "Constructed a Python CLI for managing AWS S3 file transfers, reducing manual cloud operations by 50%",
+          "source_tag": "project:AWS S3 Management Shell:0"
+        },
+        {
+          "text": "Implemented 10+ commands for uploading, copying, deleting, listing, and syncing S3 objects via Boto3",
+          "source_tag": "project:AWS S3 Management Shell:1"
+        },
+        {
+          "text": "Abstracted complex SDK calls into reusable modules to simplify error handling and harden CLI workflows",
+          "source_tag": "project:AWS S3 Management Shell:2"
+        }
+      ]
+    }
+  ],
+  "skills_grouped": {
+    "Languages": ["Python", "SQL", "TypeScript", "JavaScript", "Java", "C", "HTML/CSS"],
+    "Frameworks": ["LangChain", "Playwright", "Pydantic", "React.js", "Next.js", "Flask", "Selenium", "Cucumber"],
+    "Tools/Cloud": ["Claude API", "Anthropic API", "OpenAI API", "AWS S3", "Docker", "Postman", "Git", "Jira"],
+    "Practices": ["Agentic AI", "LLM Integration", "Prompt Engineering", "CI/CD", "RESTful API Design", "BDD", "Agile"]
+  },
+  "education": [
+    {
+      "school": "University of Guelph",
+      "degree": "Bachelor of Computing, Software Engineering (Minor: Business)",
+      "location": "Guelph, ON",
+      "start": "2019-09",
+      "end": "2023-05",
+      "honors": ["Graduated with Distinction", "Dean's Honours List"],
+      "relevant_courses": ["Cloud Computing", "Parallel Programming", "Software System Development & Integration"]
+    }
+  ],
+  "keywords_covered": ["agentic", "claude", "llm", "llms", "sql", "automation", "mcp", "workflow automation", "prompt engineering", "LLM deployment", "REST", "Playwright"]
+}

@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from playwright.async_api import async_playwright
 
 from src.config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL, TEMPLATES_DIR, load_prompt
 from src.schemas import JobPosting, Profile, ResumeContent
 
-_client = Anthropic(api_key=ANTHROPIC_API_KEY)
+_client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+
+# Marks a content block as cacheable. The system prompts are fully static and
+# the profile block is static per-person, so caching that prefix cuts latency
+# and cost on every run — and pays off hugely across multiple applications.
+_CACHE = {"type": "ephemeral"}
 
 _jinja = Environment(
     loader=FileSystemLoader(TEMPLATES_DIR),
@@ -49,25 +55,37 @@ def _inline_styles(html: str) -> str:
     )
 
 
-def tailor_resume(profile: Profile, posting: JobPosting, run_dir: Path) -> ResumeContent:
+async def tailor_resume(
+    profile: Profile, posting: JobPosting, run_dir: Path
+) -> ResumeContent:
     system_prompt = load_prompt("resume_tailor.md")
-    user_msg = (
+    # Cached prefix: static system prompt + per-person profile. Variable suffix:
+    # the JD + final instruction (changes every application).
+    profile_block = f"<profile>\n{_profile_for_prompt(profile)}\n</profile>"
+    jd_block = (
         f"<job_posting>\n"
         f"company: {posting.company}\n"
         f"title: {posting.title}\n"
         f"keywords: {', '.join(posting.keywords)}\n\n"
         f"{posting.description_md}\n"
         f"</job_posting>\n\n"
-        f"<profile>\n{_profile_for_prompt(profile)}\n</profile>\n\n"
         f"Return ONLY a JSON object matching the ResumeContent schema. "
         f"No prose, no markdown fences."
     )
 
-    resp = _client.messages.create(
+    resp = await _client.messages.create(
         model=ANTHROPIC_MODEL,
         max_tokens=8000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_msg}],
+        system=[{"type": "text", "text": system_prompt, "cache_control": _CACHE}],
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": profile_block, "cache_control": _CACHE},
+                    {"type": "text", "text": jd_block},
+                ],
+            }
+        ],
     )
     raw = resp.content[0].text.strip()
     if raw.startswith("```"):
@@ -79,18 +97,24 @@ def tailor_resume(profile: Profile, posting: JobPosting, run_dir: Path) -> Resum
 
 
 _AGENT_REVEAL_CONTEXT = """\
-The candidate's project at github.com/Austin-FV/job-apply-agent is the agent that wrote this letter, generated the attached resume, and (depending on the run mode) filled out this very application form.
+This block is source material for a first-person cover letter. Everything below is written in my own voice — use "I" and "my" throughout. Do not narrate about me in third person; mirror the voice of the source.
 
-Key technical points the candidate wants the reader to understand:
-- Python + Claude Sonnet 4.6 + browser-use + Playwright. The browser-use agent is what drives the ATS form.
-- Anti-hallucination: every resume bullet carries a Pydantic `source_tag` that points back to a real profile achievement. The LLM cannot invent experience — fabricated bullets fail schema validation.
-- Typed pipeline: JD HTML → Pydantic `JobPosting` → LLM-tailored `ResumeContent` JSON → Jinja2 HTML → Playwright PDF. Each step has a typed contract, which is why the output is reliable enough to submit.
-- Pragmatic build choices: dropped WeasyPrint after hitting Windows GTK install pain, switched to Playwright's `page.pdf()` since Playwright was already in the stack. The git history shows the actual debugging path.
+---
 
-The agent is open source and the run artifacts for this exact application (scraped JD, generated resume JSON with source_tags, cover letter, browser-use trace) are committed in the repo."""
+I built an open-source agent — github.com/Austin-FV/job-apply-agent — that wrote this letter, generated the attached resume, and (depending on the run mode) filled out this application form on its own. Python, Claude Sonnet 4.6, browser-use, Playwright.
+
+Two design choices in it that map to what the Operations AI Engineer role is asking for:
+
+1. **Anti-hallucination as a typed contract.** Every resume bullet the agent produces carries a Pydantic-validated `source_tag` that points back to a specific achievement in my profile.yaml. The LLM physically cannot output a bullet that doesn't trace to a real entry — fabricated content fails schema validation at parse time, before it ever hits a PDF. Schemas as data quality enforcement, not paperwork.
+
+2. **One agent code path over per-ATS scripts.** The naive build would have been a Rippling adapter, a Greenhouse adapter, a Lever adapter — each one rotting on the next ATS redesign. Instead I hand a vision-aware browser to Claude with a checklist and applicant data, and one code path covers any ATS. The maintenance cost stays flat as I add target sites.
+
+Prior work that shows the same instincts: at Express Scripts Canada I built a Selenium automation framework with 25 reusable components rather than one-off scripts (which is why the cover-letter agent's "one code path" bet felt natural). gimmit, a VS Code extension I shipped, uses Anthropic and OpenAI APIs to ground commit messages in actual diffs — the same anti-hallucination instinct as the source_tag system, applied to a different surface.
+
+The full run artifacts for this exact application — scraped JD, resume JSON with source_tags, the browser-use trace, the GIF and MP4 of the agent at work — are committed in the repo so you can inspect what the agent actually produced."""
 
 
-def write_cover_letter(
+async def write_cover_letter(
     profile: Profile,
     posting: JobPosting,
     run_dir: Path,
@@ -112,10 +136,10 @@ def write_cover_letter(
     )
     user_msg = "\n\n".join(parts)
 
-    resp = _client.messages.create(
+    resp = await _client.messages.create(
         model=ANTHROPIC_MODEL,
         max_tokens=2000,
-        system=system_prompt,
+        system=[{"type": "text", "text": system_prompt, "cache_control": _CACHE}],
         messages=[{"role": "user", "content": user_msg}],
     )
     body = resp.content[0].text.strip()
@@ -170,10 +194,12 @@ async def generate(
     reveal_agent: bool = False,
 ) -> tuple[Path, Path]:
     """Generate both PDFs. Returns (resume_pdf, cover_letter_pdf)."""
-    resume = tailor_resume(profile, posting, run_dir)
+    # The two LLM calls are independent — run them concurrently.
+    resume, cover_body = await asyncio.gather(
+        tailor_resume(profile, posting, run_dir),
+        write_cover_letter(profile, posting, run_dir, reveal_agent=reveal_agent),
+    )
     resume_html = _render_resume_html(resume, profile, run_dir)
-
-    cover_body = write_cover_letter(profile, posting, run_dir, reveal_agent=reveal_agent)
     cover_html = _render_cover_html(cover_body, profile, posting, run_dir)
 
     resume_pdf = run_dir / "resume.pdf"
