@@ -8,9 +8,9 @@ $ uv run job-apply apply <posting-url> --reveal-agent --autonomous --record
 
 > This repo was built to apply to Opendoor's [Operations AI Engineer role in Toronto](https://ats.rippling.com/en-CA/opendoor/jobs/f572e889-0644-4590-8a5a-64f73d7db17d) in response to [Kaz Nejatian's challenge](https://x.com/nejatian/status/2054547638997966976): apply using only AI, explain how you did it, extra points for creativity. The artifacts of that exact run are committed under [`runs/20260520-235445-opendoor-operations-ai-engineer/`](runs/20260520-235445-opendoor-operations-ai-engineer/) so you can inspect what the agent actually produced.
 
-<video src="runs/20260520-235445-opendoor-operations-ai-engineer/form_run.mp4" controls width="100%"></video>
+![Annotated GIF of the agent filling the Opendoor ATS form, step by step](runs/20260520-235445-opendoor-operations-ai-engineer/form_run.gif)
 
-*Continuous screen recording of the agent filling the real Opendoor application form — cursor, typing, scrolls, uploads, all in real time.* For an annotated step-by-step view of what the agent was reasoning at each moment, see [`form_run.gif`](runs/20260520-235445-opendoor-operations-ai-engineer/form_run.gif).
+*Annotated step-by-step of the agent filling the real Opendoor application form — each frame captioned with what the agent was reasoning at that moment.* The full continuous screen recording (real cursor motion, character-by-character typing, uploads) is also committed as [`form_run.mp4`](runs/20260520-235445-opendoor-operations-ai-engineer/form_run.mp4) (≈11 MB).
 
 ## How it works
 
@@ -86,10 +86,10 @@ The form-fill task lives in [`src/fill_form.py`](src/fill_form.py); the field-ma
 **ATS form filling** ([`fill_form.py`](src/fill_form.py))
 - One `browser-use` + Claude Sonnet 4.6 code path fills any ATS (design decision #3) — checklist-driven and **form-agnostic**: fills whatever fields exist, treats absent ones as normal, uses the Apply-button-enabled state as the done signal
 - Uploads resume + cover letter through browser-use's required file-path allowlist
-- Two submission modes — **review-stop** (default; stops before submit for human verification) and **`--autonomous`** (submits, captures the confirmation) — plus an annotated **GIF** of the whole run (`form_run.gif`)
+- Two submission modes — **review-stop** (default; stops before submit for human verification) and **`--autonomous`** (submits, captures the confirmation). An annotated **GIF** (`form_run.gif`) is always written; pass **`--record`** to also save a continuous MP4 of the session (with the browser-launch lead-in auto-trimmed)
 
 **Run management** ([`run.py`](src/run.py))
-- Every run is a self-contained, timestamped `runs/` dir (JD, JSON, PDFs, agent trace, GIF)
+- Every run is a self-contained, timestamped `runs/` dir (JD, JSON, PDFs, agent trace, GIF; MP4 too when `--record`)
 - `--use-run <id>|latest` reuses prior docs and re-runs only the form fill in a fresh dir (cheap iteration); `scrape-only <url>` debugs the scraper alone
 
 ## Stack
@@ -144,7 +144,8 @@ A **full pipeline run** (`apply <url>`) lands in `runs/<timestamp>-<company>-<ro
 ├── form_task.md              task prompt handed to browser-use
 ├── form_log.jsonl            agent step-by-step trace
 ├── form_result.json          final URL, step count, errors
-└── form_run.gif              annotated GIF of the agent filling the form
+├── form_run.gif              annotated GIF of the agent filling the form
+└── form_run.mp4              continuous screen recording (only when --record)
 ```
 
 A **`--use-run` form-fill dir** is lighter — it reuses prior docs, so it carries the copied `jd.json` + both PDFs plus the form-fill artifacts (`form_task.md`, `form_log.jsonl`, `form_result.json`, `form_run.gif`), not the doc-generation intermediates.
